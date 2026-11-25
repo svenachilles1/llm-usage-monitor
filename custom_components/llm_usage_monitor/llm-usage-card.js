@@ -377,24 +377,27 @@ class LlmUsageCard extends HTMLElement {
     }
 
     let subBadge = "";
+    let footHtml = "";
     if (subscription && subscription.state) {
       const a = subscription.attributes || {};
       const active = !!a.active;
       const stateLabel = active ? t.active : t.inactive;
       const period = a.period_end ? llmUsageCountdown(a.period_end, t) : null;
-      subBadge = `<div class="badge ${active ? "badge-ok" : "badge-off"}">${llmUsageEscHtml(stateLabel)}</div>` +
-        (period ? `<div class="ring-meta">${llmUsageEscHtml(t.periodUntil)}: <b>${llmUsageEscHtml(period)}</b></div>` : "");
+      subBadge = `<div class="badge ${active ? "badge-ok" : "badge-off"}">${llmUsageEscHtml(stateLabel)}</div>`;
+      footHtml = period
+        ? `${llmUsageEscHtml(t.periodUntil)}: <b>${llmUsageEscHtml(period)}</b>`
+        : "";
     }
 
     return `
       <div class="tile">
         <div class="tile-head">
           <div class="tile-title"><ha-icon icon="mdi:atom"></ha-icon><span>${llmUsageEscHtml("NanoGPT")}</span></div>
-          <div class="tile-badges">${subBadge.split("</div>")[0]}</div>
+          <div class="tile-badges">${subBadge}</div>
         </div>
         ${tile.error ? this._errorBanner(t, tile.error) : ""}
         ${rings ? `<div class="ring-row">${rings}</div>` : ""}
-        ${subBadge.includes("ring-meta") ? `<div class="tile-foot">${subBadge}</div>` : ""}
+        ${footHtml ? `<div class="tile-foot">${footHtml}</div>` : ""}
       </div>`;
   }
 
