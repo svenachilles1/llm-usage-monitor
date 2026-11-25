@@ -22,7 +22,7 @@ Monitor your **Ollama** cloud and **NanoGPT** subscription usage limits directly
 ### Ollama (all plans)
 
 - **Requests in the last 24 hours** with hourly sparkline
-- **Usage cost over 7 days** with top-model breakdown
+- **Usage over the last 7 days** — USD cost on credit plans, request count on legacy flat-rate plans — with top-model breakdown
 
 ### NanoGPT
 
@@ -73,7 +73,7 @@ Your API keys are treated as credentials, because they are:
    - **NanoGPT**: create an API key at [nano-gpt.com](https://nano-gpt.com) under Settings (optional)
 4. At least one key is required; keys are validated live during setup
 
-The poll interval can be changed in the integration's **Configure** (options) menu — default is 300 seconds, both APIs allow 10 requests per minute, so even 60-second polling is safe.
+The poll interval can be changed in the integration's **Configure** (options) menu — default is 300 seconds. Ollama allows 10 requests per minute and NanoGPT 60 per API key, so even 60-second polling is safe.
 
 ## Card setup
 
@@ -93,7 +93,7 @@ Add a manual card to your dashboard and choose **LLM Usage Card** (type: `llm-us
 | `sensor.ollama_weekly_used` | Weekly limit used in % (legacy plans) |
 | `sensor.ollama_credits_balance` | Remaining included credits in USD (credit plans) |
 | `sensor.ollama_requests_24h` | Requests in the last 24 hours |
-| `sensor.ollama_usage_7d` | Usage cost over the last 7 days in USD |
+| `sensor.ollama_usage_7d` | Usage over the last 7 days (USD cost on credit plans, request count on legacy flat-rate plans) |
 | `sensor.nanogpt_weekly_tokens_used` | Weekly input tokens used |
 | `sensor.nanogpt_daily_tokens_used` | Daily input tokens used (only if a daily quota exists) |
 | `sensor.nanogpt_subscription` | Subscription state (diagnostic) |

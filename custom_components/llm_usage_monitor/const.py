@@ -19,7 +19,7 @@ CONF_OLLAMA_API_KEY = "ollama_api_key"
 CONF_NANOGPT_API_KEY = "nanogpt_api_key"
 CONF_POLL_INTERVAL = "poll_interval"
 
-DEFAULT_POLL_INTERVAL = 300  # seconds; APIs allow 10 req/min — plenty of headroom
+DEFAULT_POLL_INTERVAL = 300  # seconds; Ollama allows 10 req/min, NanoGPT 60 req/min per key — plenty of headroom
 
 # --- API endpoints (official, documented) ---
 OLLAMA_BASE_URL = "https://ollama.com"

@@ -9,7 +9,7 @@
  * - All dynamic values are HTML/attribute-escaped.
  */
 
-const LLM_USAGE_VERSION = "1.0.2";
+const LLM_USAGE_VERSION = "1.0.3";
 
 const LLM_USAGE_I18N = {
   de: {

@@ -22,7 +22,7 @@
 ### Ollama (alle Pläne)
 
 - **Anfragen der letzten 24 Stunden** mit stündlicher Sparkline
-- **Verbrauchskosten über 7 Tage** mit Top-Modell-Aufschlüsselung
+- **Verbrauch über 7 Tage** — USD-Kosten bei Credits-Plänen, Anfrage-Anzahl bei Legacy-Flatrates — mit Top-Modell-Aufschlüsselung
 
 ### NanoGPT
 
@@ -73,7 +73,7 @@ Deine API-Keys werden wie Zugangsdaten behandelt, denn genau das sind sie:
    - **NanoGPT**: API-Key unter [nano-gpt.com](https://nano-gpt.com) in den Einstellungen erstellen (optional)
 4. Mindestens ein Key ist erforderlich; Keys werden beim Einrichten live validiert
 
-Das Abfrage-Intervall lässt sich im **Konfigurieren**-Menü (Optionen) der Integration ändern — Standard sind 300 Sekunden, beide APIs erlauben 10 Anfragen pro Minute, sogar 60-Sekunden-Polling ist sicher.
+Das Abfrage-Intervall lässt sich im **Konfigurieren**-Menü (Optionen) der Integration ändern — Standard sind 300 Sekunden. Ollama erlaubt 10 Anfragen pro Minute, NanoGPT 60 pro API-Key — sogar 60-Sekunden-Polling ist sicher.
 
 ## Karten-Setup
 
@@ -93,7 +93,7 @@ Füge eine manuelle Karte zum Dashboard hinzu und wähle **LLM Usage Card** (Typ
 | `sensor.ollama_weekly_used` | Wochenlimit genutzt in % (Legacy-Pläne) |
 | `sensor.ollama_credits_balance` | Verbleibendes Guthaben in USD (Credits-Pläne) |
 | `sensor.ollama_requests_24h` | Anfragen der letzten 24 Stunden |
-| `sensor.ollama_usage_7d` | Verbrauchskosten über 7 Tage in USD |
+| `sensor.ollama_usage_7d` | Verbrauch über 7 Tage (USD-Kosten bei Credits-Plänen, Anfrage-Anzahl bei Legacy-Flatrates) |
 | `sensor.nanogpt_weekly_tokens_used` | Wöchentlich genutzte Input-Token |
 | `sensor.nanogpt_daily_tokens_used` | Täglich genutzte Input-Token (nur wenn Tageslimit vorhanden) |
 | `sensor.nanogpt_subscription` | Abo-Status (Diagnose) |
