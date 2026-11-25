@@ -396,7 +396,7 @@ class LlmUsageCard extends HTMLElement {
           <div class="tile-badges">${subBadge}</div>
         </div>
         ${tile.error ? this._errorBanner(t, tile.error) : ""}
-        ${rings ? `<div class="ring-row">${rings}</div>` : ""}
+        ${rings ? `<div class="ring-row ring-row-center">${rings}</div>` : ""}
         ${footHtml ? `<div class="tile-foot">${footHtml}</div>` : ""}
       </div>`;
   }
@@ -536,6 +536,7 @@ class LlmUsageCard extends HTMLElement {
       .badge-off { background: rgba(248,113,113,.15); border-color: rgba(248,113,113,.4); }
 
       .ring-row { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
+      .ring-row-center { flex: 1 1 auto; align-items: center; }
       .ring-block { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1 1 120px; min-width: 120px; }
       .ring {
         width: 104px; height: 104px; border-radius: 50%; position: relative;
