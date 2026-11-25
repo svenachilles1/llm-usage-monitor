@@ -99,9 +99,12 @@ test("discover: empty and null states tolerated", () => {
 
 // --------------------------------------------------------------- countdown --
 test("countdown: future ISO timestamp renders d/h/m", () => {
+  // The exact hour may shift by one minute due to test-execution latency
+  // between computing the target and running the countdown — assert the
+  // Nd Nh format, not a fragile to-the-minute value.
   const future = new Date(Date.now() + 3 * 86400000 + 5 * 3600000).toISOString();
   const out = logic.llmUsageCountdown(future, logic.LLM_USAGE_I18N.de);
-  assertTrue(/3d 5h/.test(out), `expected '3d 5h' in ${out}`);
+  assertTrue(/^3d (4|5)h$/.test(out), `expected Nd Nh format, got ${out}`);
 });
 
 test("countdown: past timestamp renders resetting label", () => {

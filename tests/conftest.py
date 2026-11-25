@@ -99,7 +99,19 @@ if "homeassistant" not in sys.modules:  # pragma: no cover
     ha_helpers = _ensure_module("homeassistant.helpers")
     dr_mod = _ensure_module("homeassistant.helpers.device_registry")
     dr_mod.DeviceEntryType = type("DeviceEntryType", (), {"SERVICE": "service"})
+    dr_mod.DeviceInfo = type(
+        "DeviceInfo", (), {"__init__": lambda self, **kwargs: None}
+    )
     ha_helpers.device_registry = dr_mod
+
+    ent_mod = _ensure_module("homeassistant.helpers.entity")
+
+    class _EntityCategory:
+        DIAGNOSTIC = "diagnostic"
+        CONFIG = "config"
+
+    ent_mod.EntityCategory = _EntityCategory
+    ha_helpers.entity = ent_mod
 
     uc_mod = _ensure_module("homeassistant.helpers.update_coordinator")
     uc_mod.DataUpdateCoordinator = _SubscriptableType("DataUpdateCoordinator", (), {})

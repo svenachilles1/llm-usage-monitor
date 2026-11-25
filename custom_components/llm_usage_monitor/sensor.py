@@ -7,7 +7,7 @@ NanoGPT sensors. No account names, no hardcoded entity IDs.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -18,6 +18,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -71,6 +72,19 @@ def _num(value: Any, cast=float) -> Any | None:
 def _iso(value: Any) -> str | None:
     dt = parse_timestamp(value)
     return dt.isoformat() if dt else None
+
+
+def _next_monday_utc_iso() -> str:
+    """Next Monday 00:00 UTC — NanoGPT's documented weekly reset point.
+
+    NanoGPT subscription quotas reset on the calendar (Monday 00:00 UTC);
+    the API sometimes reports ``resetAt: null`` mid-period. Calculating the
+    documented reset keeps the countdown running instead of dropping it.
+    """
+    now = datetime.now(timezone.utc)
+    days = (7 - now.weekday()) % 7 or 7  # Monday=0 -> next week (today's 00:00 has passed)
+    target = (now + timedelta(days=days)).replace(hour=0, minute=0, second=0, microsecond=0)
+    return target.isoformat()
 
 
 class LlmUsageSensorEntity(CoordinatorEntity[LLMUsageCoordinator], SensorEntity):
@@ -273,11 +287,14 @@ class OllamaRequests24hSensor(LlmUsageSensorEntity):
 
 
 class OllamaUsage7dSensor(LlmUsageSensorEntity):
-    """Usage cost over the last 7 days with model breakdown."""
+    """Usage over the last 7 days.
 
-    _attr_device_class = SensorDeviceClass.MONETARY
-    _attr_icon = "mdi:currency-usd"
-    _attr_native_unit_of_measurement = "USD"
+    Credit-metered plans report a USD cost; legacy flat-rate plans have no
+    USD accounting at all (usage_usd comes back null/0 for every bucket) —
+    there the sensor reports the request count instead, with unit and device
+    class following the reported values.
+    """
+
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
@@ -285,25 +302,49 @@ class OllamaUsage7dSensor(LlmUsageSensorEntity):
         return "Usage 7d"
 
     @property
-    def native_value(self) -> float | None:
+    def _totals(self) -> dict[str, Any]:
         pdata = self._provider_data or {}
         usage = pdata.get(DATA_USAGE_7D) or {}
-        totals = usage.get("totals") or {}
-        value = _num(totals.get("usage_usd"))
-        return round(value, 4) if value is not None else None
+        totals = usage.get("totals")
+        return totals if isinstance(totals, dict) else {}
+
+    @property
+    def _is_usd(self) -> bool:
+        return self._totals.get("usage_usd") is not None
+
+    @property
+    def device_class(self) -> SensorDeviceClass | None:
+        return SensorDeviceClass.MONETARY if self._is_usd else None
+
+    @property
+    def native_unit_of_measurement(self) -> str:
+        return "USD" if self._is_usd else "requests"
+
+    @property
+    def icon(self) -> str:
+        return "mdi:currency-usd" if self._is_usd else "mdi:counter"
+
+    @property
+    def native_value(self) -> float | int | None:
+        totals = self._totals
+        if totals.get("usage_usd") is not None:
+            return _num(totals.get("usage_usd"), float)
+        return _num(totals.get("request_count"), int)
 
     def _kind_attributes(self) -> dict[str, Any]:
         pdata = self._provider_data or {}
         usage = pdata.get(DATA_USAGE_7D) or {}
-        totals = usage.get("totals") or {}
-        return {
+        totals = self._totals
+        attrs: dict[str, Any] = {
             "request_count": _num(totals.get("request_count"), int),
-            "input_tokens": _num(totals.get("input_tokens"), int),
-            "cached_input_tokens": _num(totals.get("cached_input_tokens"), int),
-            "output_tokens": _num(totals.get("output_tokens"), int),
+            "usage_usd": _num(totals.get("usage_usd")),
+            "usage_basis": "usd" if self._is_usd else "requests",
             "top_models": top_models(usage),
             "buckets": compact_buckets(usage),
         }
+        if not self._is_usd:
+            attrs.pop("usage_usd", None)
+        return attrs
 
 
 class NanogptWeeklyTokensSensor(LlmUsageSensorEntity):
@@ -328,11 +369,13 @@ class NanogptWeeklyTokensSensor(LlmUsageSensorEntity):
         usage = pdata.get(DATA_USAGE) or {}
         weekly = usage.get("weeklyInputTokens") or {}
         limits = usage.get("limits") or {}
+        api_reset = _iso(weekly.get("resetAt"))
         return {
             "remaining": _num(weekly.get("remaining"), int),
             "percent_used": _num(weekly.get("percentUsed")),
             "limit": _num(limits.get("weeklyInputTokens"), int),
-            "reset_at": _iso(weekly.get("resetAt")),
+            "reset_at": api_reset or _next_monday_utc_iso(),
+            "reset_at_source": "api" if api_reset else "calculated",
             "degraded": bool(weekly.get("degraded", False)),
         }
 
@@ -372,7 +415,9 @@ class NanogptSubscriptionSensor(LlmUsageSensorEntity):
     """Subscription state and billing-routing advice (diagnostic)."""
 
     _attr_icon = "mdi:card-account-details-outline"
-    _attr_entity_category = "diagnostic"
+    # HA 2026.x entity registry REQUIRES the Enum instance — a plain
+    # "diagnostic" string is rejected at async_get_or_create time.
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def name(self) -> str:

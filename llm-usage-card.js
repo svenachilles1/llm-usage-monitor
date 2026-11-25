@@ -300,15 +300,20 @@ class LlmUsageCard extends HTMLElement {
     if (requests && requests.state !== "unavailable") {
       const a = requests.attributes || {};
       const buckets = Array.isArray(a.buckets) ? a.buckets : [];
+      const usdSuffix = a.usage_usd != null ? " · " + llmUsageEscHtml(llmUsageFmtUsd(a.usage_usd)) : "";
       statsBlock += `
         <div class="stat-row">
           <div class="stat-label">${llmUsageEscHtml(t.requests24h)}</div>
-          <div class="stat-value">${llmUsageEscHtml(requests.state)} ${llmUsageEscHtml(t.requests)} · ${llmUsageEscHtml(llmUsageFmtUsd(a.usage_usd))}</div>
+          <div class="stat-value">${llmUsageEscHtml(requests.state)} ${llmUsageEscHtml(t.requests)}${usdSuffix}</div>
         </div>`;
       statsBlock += this._sparkline(buckets, "var(--llm-spark-1)");
     }
     if (usage7d && usage7d.state !== "unavailable") {
       const a = usage7d.attributes || {};
+      const isUsd = a.unit_of_measurement === "USD";
+      const valueHtml = isUsd
+        ? llmUsageEscHtml(llmUsageFmtUsd(usage7d.state))
+        : llmUsageEscHtml(usage7d.state) + " " + llmUsageEscHtml(t.requests);
       const models = Array.isArray(a.top_models) ? a.top_models : [];
       let modelsHtml = "";
       if (models.length) {
@@ -318,7 +323,7 @@ class LlmUsageCard extends HTMLElement {
       statsBlock += `
         <div class="stat-row">
           <div class="stat-label">${llmUsageEscHtml(t.usage7d)}</div>
-          <div class="stat-value">${llmUsageEscHtml(llmUsageFmtUsd(usage7d.state))} · ${llmUsageEscHtml(a.request_count != null ? a.request_count : "–")} ${llmUsageEscHtml(t.requests)}</div>
+          <div class="stat-value">${valueHtml}${!isUsd ? "" : ` · ${llmUsageEscHtml(a.request_count != null ? a.request_count : "–")} ${llmUsageEscHtml(t.requests)}`}</div>
         </div>${modelsHtml}`;
     }
 
