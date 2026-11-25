@@ -4,6 +4,8 @@
 
 Überwache deine **Ollama**-Cloud- und **NanoGPT**-Abo-Limits direkt in Home Assistant — Session- und Wochenlimits, Guthaben, Token-Quoten, Reset-Countdowns und Verbrauchsverlauf auf einer schönen Glassmorphism-Dashboard-Karte.
 
+![LLM Usage Card](docs/screenshot.png)
+
 ## Funktionen
 
 ### Ollama (Legacy-Pläne — Session- und Wochenlimit)
