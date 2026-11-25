@@ -1,8 +1,5 @@
 {
   "name": "LLM Usage Monitor",
   "render_readme": true,
-  "homeassistant": "2024.7.0",
-  "categories": [
-    "integration"
-  ]
+  "homeassistant": "2024.7.0"
 }
