@@ -1,0 +1,31 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Track your Ollama cloud and NanoGPT subscription usage limits. Enter one or both API keys — at least one is required. Keys are stored in Home Assistant only and never appear in logs, sensors or exports.",
+        "data": {
+          "ollama_api_key": "Ollama API key (optional)",
+          "nanogpt_api_key": "NanoGPT API key (optional)"
+        }
+      }
+    },
+    "error": {
+      "no_key": "Enter at least one API key.",
+      "cannot_connect": "Could not connect to the provider. Check your network and try again.",
+      "invalid_ollama_key": "The Ollama API key was rejected. Check it at ollama.com under Settings.",
+      "invalid_nanogpt_key": "The NanoGPT API key was rejected. Check it at nano-gpt.com under Settings."
+    },
+    "abort": {
+      "already_configured": "This key combination is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "poll_interval": "Poll interval in seconds (60–86400, default 300)"
+        }
+      }
+    }
+  }
+}
