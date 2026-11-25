@@ -69,6 +69,20 @@ def _num(value: Any, cast=float) -> Any | None:
         return None
 
 
+def _percent_from_quota(used: Any, limit: Any) -> float | None:
+    """Percent used computed from used/limit ourselves.
+
+    The NanoGPT API's ``percentUsed`` is reported as a 0–1 ratio (0.1548 for
+    15.48% on live accounts) — rendering it raw shows a 0% ring. Computing
+    from the quota is deterministic and unit-safe.
+    """
+    used_n = _num(used)
+    limit_n = _num(limit)
+    if used_n is None or limit_n is None or limit_n <= 0:
+        return None
+    return round(used_n / limit_n * 100.0, 2)
+
+
 def _iso(value: Any) -> str | None:
     dt = parse_timestamp(value)
     return dt.isoformat() if dt else None
@@ -370,10 +384,12 @@ class NanogptWeeklyTokensSensor(LlmUsageSensorEntity):
         weekly = usage.get("weeklyInputTokens") or {}
         limits = usage.get("limits") or {}
         api_reset = _iso(weekly.get("resetAt"))
+        used = _num(weekly.get("used"), int)
+        limit = _num(limits.get("weeklyInputTokens"), int)
         return {
             "remaining": _num(weekly.get("remaining"), int),
-            "percent_used": _num(weekly.get("percentUsed")),
-            "limit": _num(limits.get("weeklyInputTokens"), int),
+            "percent_used": _percent_from_quota(used, limit),
+            "limit": limit,
             "reset_at": api_reset or _next_monday_utc_iso(),
             "reset_at_source": "api" if api_reset else "calculated",
             "degraded": bool(weekly.get("degraded", False)),
@@ -402,10 +418,12 @@ class NanogptDailyTokensSensor(LlmUsageSensorEntity):
         usage = pdata.get(DATA_USAGE) or {}
         daily = usage.get("dailyInputTokens") or {}
         limits = usage.get("limits") or {}
+        used = _num(daily.get("used"), int)
+        limit = _num(limits.get("dailyInputTokens"), int)
         return {
             "remaining": _num(daily.get("remaining"), int),
-            "percent_used": _num(daily.get("percentUsed")),
-            "limit": _num(limits.get("dailyInputTokens"), int),
+            "percent_used": _percent_from_quota(used, limit),
+            "limit": limit,
             "reset_at": _iso(daily.get("resetAt")),
             "degraded": bool(daily.get("degraded", False)),
         }

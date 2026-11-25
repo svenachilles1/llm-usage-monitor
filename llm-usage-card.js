@@ -478,8 +478,16 @@ class LlmUsageCard extends HTMLElement {
 
   _styles() {
     return `
-      :host { display: block; }
-      ha-card { border-radius: var(--ha-card-border-radius, 20px); overflow: hidden; position: relative; background: transparent; border: none; }
+      :host {
+        display: block;
+        --llm-green: #22c55e;
+        --llm-amber: #f59e0b;
+        --llm-red: #ef4444;
+        --llm-muted: rgba(255,255,255,.28);
+        --llm-spark-1: #38bdf8;
+        --llm-spark-2: #a78bfa;
+      }
+      ha-card { display: block; border-radius: var(--ha-card-border-radius, 20px); overflow: hidden; position: relative; background: transparent; border: none; }
       * { box-sizing: border-box; }
 
       .aurora { position: relative; }
@@ -494,7 +502,7 @@ class LlmUsageCard extends HTMLElement {
         100% { transform: translate(-18px, 22px) scale(.94); }
       }
 
-      .card-content { position: relative; z-index: 1; padding: 18px; color: var(--primary-text-color); }
+      .card-content { position: relative; z-index: 1; padding: 18px; color: var(--primary-text-color, #e6edf3); }
       .header { margin-bottom: 10px; }
       .title {
         margin: 0; font-size: 1.45em; font-weight: 800; letter-spacing: .01em;

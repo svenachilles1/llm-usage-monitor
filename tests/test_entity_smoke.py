@@ -34,3 +34,13 @@ def test_next_monday_utc_iso_shape():
 
     parsed = datetime.fromisoformat(value)
     assert parsed.weekday() == 0, "must be a Monday"
+
+
+def test_percent_from_quota():
+    """NanoGPT live finding: percentUsed arrives as 0-1 ratio — we compute
+    the percent ourselves from used/limit."""
+    assert sensor_mod._percent_from_quota(9288744, 60000000) == 15.48
+    assert sensor_mod._percent_from_quota(0, 60000000) == 0.0
+    assert sensor_mod._percent_from_quota(100, 0) is None
+    assert sensor_mod._percent_from_quota(None, 100) is None
+    assert sensor_mod._percent_from_quota("garbage", 100) is None
