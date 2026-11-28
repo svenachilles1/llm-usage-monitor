@@ -9,7 +9,7 @@
  * - All dynamic values are HTML/attribute-escaped.
  */
 
-const LLM_USAGE_VERSION = "1.0.4";
+const LLM_USAGE_VERSION = "1.0.5";
 
 const LLM_USAGE_I18N = {
   de: {
@@ -185,6 +185,7 @@ class LlmUsageCard extends HTMLElement {
     this._hass = null;
     this._config = {};
     this._timer = null;
+    this._dom = null;
   }
 
   setConfig(config) {
@@ -492,17 +493,27 @@ class LlmUsageCard extends HTMLElement {
       body = `<div class="grid">${tiles}</div>`;
     }
 
-    this.shadowRoot.innerHTML = `
-      <style>${this._styles()}</style>
-      <ha-card class="aurora">
-        <div class="aurora-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div></div>
-        <div class="card-content${llmUsageIsLight(this._hass) ? " light" : ""}">
+    // Build the skeleton ONCE: the aurora background (with its llm-drift
+    // animation) survives every re-render — state updates, config edits and
+    // the 30 s countdown timer only refresh the content layer, so the blobs
+    // never restart and the border glow stays visually stable.
+    if (!this._dom) {
+      this.shadowRoot.innerHTML = `
+        <style>${this._styles()}</style>
+        <ha-card class="aurora">
+          <div class="aurora-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div></div>
+          <div class="card-content"></div>
+        </ha-card>`;
+      this._dom = {
+        content: this.shadowRoot.querySelector(".card-content"),
+      };
+    }
+    this._dom.content.className = `card-content${llmUsageIsLight(this._hass) ? " light" : ""}`;
+    this._dom.content.innerHTML = `
           <div class="header">
             <h1 class="title">${llmUsageEscHtml(title)}</h1>
           </div>
-          ${body}
-        </div>
-      </ha-card>`;
+          ${body}`;
   }
 
   _styles() {
@@ -516,22 +527,22 @@ class LlmUsageCard extends HTMLElement {
         --llm-spark-1: #38bdf8;
         --llm-spark-2: #a78bfa;
       }
-      ha-card { display: block; border-radius: var(--ha-card-border-radius, 20px); overflow: hidden; position: relative; background: transparent; border: none; }
+      ha-card { display: block; border-radius: var(--ha-card-border-radius, 20px); overflow: hidden; position: relative; background: transparent; border: none; container-type: inline-size; }
       * { box-sizing: border-box; }
 
       .aurora { position: relative; }
       .aurora-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
       .blob { position: absolute; border-radius: 50%; filter: blur(48px); opacity: .45; animation: llm-drift 22s ease-in-out infinite alternate; }
-      .blob-1 { width: 240px; height: 240px; background: #6366f1; top: -60px; left: -40px; }
-      .blob-2 { width: 260px; height: 260px; background: #06b6d4; bottom: -80px; right: -60px; animation-delay: -7s; }
-      .blob-3 { width: 200px; height: 200px; background: #a855f7; top: 30%; right: 25%; animation-delay: -14s; }
+      .blob-1 { width: clamp(120px, 50cqw, 240px); height: clamp(120px, 50cqw, 240px); background: #6366f1; top: -60px; left: -40px; }
+      .blob-2 { width: clamp(130px, 54cqw, 260px); height: clamp(130px, 54cqw, 260px); background: #06b6d4; bottom: -80px; right: -60px; animation-delay: -7s; }
+      .blob-3 { width: clamp(100px, 42cqw, 200px); height: clamp(100px, 42cqw, 200px); background: #a855f7; top: 30%; right: 25%; animation-delay: -14s; }
       @keyframes llm-drift {
         0% { transform: translate(0, 0) scale(1); }
         50% { transform: translate(24px, -18px) scale(1.12); }
         100% { transform: translate(-18px, 22px) scale(.94); }
       }
 
-      .card-content { position: relative; z-index: 1; padding: 18px; color: var(--primary-text-color, #e6edf3); }
+      .card-content { position: relative; z-index: 1; padding: clamp(12px, 3.75cqw, 18px); color: var(--primary-text-color, #e6edf3); font-size: clamp(11px, 2.92cqw, 14px); }
       .header { margin-bottom: 10px; }
       .title {
         margin: 0; font-size: 1.45em; font-weight: 800; letter-spacing: .01em;
@@ -540,12 +551,12 @@ class LlmUsageCard extends HTMLElement {
         -webkit-text-fill-color: transparent; color: transparent;
       }
 
-      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); gap: clamp(8px, 2.9cqw, 14px); }
 
       .tile {
         background: rgba(255,255,255,.09);
         border: 1px solid rgba(255,255,255,.16);
-        border-radius: 18px; padding: 14px;
+        border-radius: 18px; padding: clamp(10px, 2.9cqw, 14px);
         backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
         box-shadow: 0 8px 24px rgba(0,0,0,.18);
         display: flex; flex-direction: column; gap: 10px;
@@ -564,17 +575,17 @@ class LlmUsageCard extends HTMLElement {
       .badge-ok { background: rgba(74,222,128,.18); border-color: rgba(74,222,128,.4); }
       .badge-off { background: rgba(248,113,113,.15); border-color: rgba(248,113,113,.4); }
 
-      .ring-row { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
+      .ring-row { display: flex; flex-wrap: wrap; gap: clamp(10px, 3.3cqw, 16px); justify-content: center; }
       .ring-row-center { flex: 1 1 auto; align-items: center; }
-      .ring-block { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1 1 120px; min-width: 120px; }
+      .ring-block { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1 1 auto; min-width: 0; }
       .ring {
-        width: 104px; height: 104px; border-radius: 50%; position: relative;
+        width: clamp(56px, 21.6cqw, 104px); height: clamp(56px, 21.6cqw, 104px); border-radius: 50%; position: relative;
         background: conic-gradient(var(--ring) calc(var(--p) * 1%), rgba(255,255,255,.10) 0);
         display: flex; align-items: center; justify-content: center;
         transition: background .4s ease;
       }
       .ring::before {
-        content: ""; position: absolute; inset: 9px; border-radius: 50%;
+        content: ""; position: absolute; inset: 8.7%; border-radius: 50%;
         background: rgba(15,18,30,.88);
       }
       .ring-inner { position: relative; z-index: 1; text-align: center; line-height: 1.15; }
@@ -594,7 +605,7 @@ class LlmUsageCard extends HTMLElement {
       .stat-sub { font-size: .72em; opacity: .7; }
 
       .sparkline {
-        display: flex; align-items: flex-end; gap: 2px; height: 44px;
+        display: flex; align-items: flex-end; gap: 2px; height: clamp(26px, 9.2cqw, 44px);
         padding: 4px; border-radius: 10px; background: rgba(255,255,255,.06);
       }
       .spark-bar { flex: 1 1 auto; max-width: 12px; border-radius: 3px 3px 0 0; background: var(--spark); opacity: .9; min-height: 2px; }

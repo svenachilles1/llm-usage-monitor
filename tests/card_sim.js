@@ -197,6 +197,22 @@ test("purchased: i18n labels exist in both languages", () => {
   assertTrue(logic.LLM_USAGE_I18N.en.purchasedBalance, "en label");
 });
 
+// ------------------------------ v1.0.5: stable aurora + responsive sizes --
+test("structure: aurora skeleton is built once and survives re-renders", () => {
+  const src = fs.readFileSync(path.join(__dirname, "..", "custom_components", "llm_usage_monitor", "llm-usage-card.js"), "utf8");
+  assertTrue(src.includes("if (!this._dom)"), "skeleton-once guard present");
+  assertTrue(src.includes("this._dom.content.className"), "content layer updated instead of full rebuild");
+  assertEq((src.match(/<div class="aurora-bg">/g) || []).length, 1, "aurora-bg html exists exactly once (inside the once-guard)");
+});
+
+test("structure: sizes are container-responsive (no fixed clipping)", () => {
+  const src = fs.readFileSync(path.join(__dirname, "..", "custom_components", "llm_usage_monitor", "llm-usage-card.js"), "utf8");
+  assertTrue(src.includes("container-type: inline-size;"), "card is a container query root");
+  assertTrue(src.includes("width: clamp(56px, 21.6cqw, 104px)"), "ring scales with card width");
+  assertTrue(src.includes("minmax(min(280px, 100%), 1fr)"), "grid shrinks instead of overflowing");
+  assertTrue(!src.includes("width: 104px; height: 104px"), "no fixed ring size left");
+});
+
 // -------------------------------------------------------------------- report --
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);
