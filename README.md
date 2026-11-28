@@ -5,6 +5,7 @@
 Monitor your **Ollama** cloud and **NanoGPT** subscription usage limits directly in Home Assistant — session and weekly limits, credits balance, token quotas, reset countdowns and usage history, rendered on a beautiful glassmorphism dashboard card.
 
 ![LLM Usage Card](docs/screenshot.png)
+![LLM Usage Card — light theme](docs/screenshot-light.png)
 
 ## Features
 
@@ -12,7 +13,7 @@ Monitor your **Ollama** cloud and **NanoGPT** subscription usage limits directly
 
 - **Session limit** ring with used percent and live reset countdown
 - **Weekly limit** ring with used percent and live reset countdown
-- Purchased credit balance as sensor attribute
+- **Purchased balance** (USD) shown directly on the card
 
 ### Ollama (credit plans)
 
@@ -37,6 +38,7 @@ Monitor your **Ollama** cloud and **NanoGPT** subscription usage limits directly
 - Works with **Ollama only, NanoGPT only, or both** — tiles appear and disappear automatically
 - Multiple accounts supported (one config entry per key combination)
 - Aurora / glassmorphism family design, animated background, progress rings, sparklines
+- Fully theme-aware — **light and dark mode** both render readable rings and values
 - Localized in **English and German** (follows your Home Assistant language)
 - Visual card editor with optional entity overrides
 - Error banners per provider (invalid key, connection problems) rendered in the same design

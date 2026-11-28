@@ -9,7 +9,7 @@
  * - All dynamic values are HTML/attribute-escaped.
  */
 
-const LLM_USAGE_VERSION = "1.0.3";
+const LLM_USAGE_VERSION = "1.0.4";
 
 const LLM_USAGE_I18N = {
   de: {
@@ -27,6 +27,7 @@ const LLM_USAGE_I18N = {
     requests: "Anfragen",
     topModels: "Top-Modelle (7 Tage)",
     credits: "Guthaben",
+    purchasedBalance: "Gekauftes Guthaben",
     planLegacy: "Legacy-Plan",
     planCredits: "Credits-Plan",
     periodUntil: "Zeitraum bis",
@@ -56,6 +57,7 @@ const LLM_USAGE_I18N = {
     requests: "requests",
     topModels: "Top models (7 days)",
     credits: "Credits",
+    purchasedBalance: "Purchased balance",
     planLegacy: "Legacy plan",
     planCredits: "Credits plan",
     periodUntil: "Period until",
@@ -129,6 +131,25 @@ function llmUsageRingColor(percent, amberAt, redAt) {
   if (percent >= redAt) return "var(--llm-red)";
   if (percent >= amberAt) return "var(--llm-amber)";
   return "var(--llm-green)";
+}
+
+function llmUsageIsLight(hass) {
+  // HA exposes the active mode as hass.themes.darkMode; when it is absent
+  // (very old frontends) the card keeps its dark-family default.
+  return !!(hass && hass.themes && hass.themes.darkMode === false);
+}
+
+function llmUsagePurchasedBalance(credits, weekly) {
+  // Credit plans carry purchased_balance_usd on the credits sensor, legacy
+  // plans on the weekly sensor — take whichever sensor is available.
+  const sources = [];
+  if (credits && credits.state !== "unavailable") sources.push(credits.attributes || {});
+  if (weekly && weekly.state !== "unavailable") sources.push(weekly.attributes || {});
+  for (const a of sources) {
+    const n = Number(a.purchased_balance_usd);
+    if (isFinite(n)) return n;
+  }
+  return null;
 }
 
 // --- Pure discovery helper (also used by the node test suite) ---
@@ -297,6 +318,14 @@ class LlmUsageCard extends HTMLElement {
     }
 
     let statsBlock = "";
+    const purchased = llmUsagePurchasedBalance(credits, weekly);
+    if (purchased != null) {
+      statsBlock += `
+        <div class="stat-row">
+          <div class="stat-label">${llmUsageEscHtml(t.purchasedBalance)}</div>
+          <div class="stat-value">${llmUsageEscHtml(llmUsageFmtUsd(purchased))}</div>
+        </div>`;
+    }
     if (requests && requests.state !== "unavailable") {
       const a = requests.attributes || {};
       const buckets = Array.isArray(a.buckets) ? a.buckets : [];
@@ -467,7 +496,7 @@ class LlmUsageCard extends HTMLElement {
       <style>${this._styles()}</style>
       <ha-card class="aurora">
         <div class="aurora-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div></div>
-        <div class="card-content">
+        <div class="card-content${llmUsageIsLight(this._hass) ? " light" : ""}">
           <div class="header">
             <h1 class="title">${llmUsageEscHtml(title)}</h1>
           </div>
@@ -549,8 +578,8 @@ class LlmUsageCard extends HTMLElement {
         background: rgba(15,18,30,.88);
       }
       .ring-inner { position: relative; z-index: 1; text-align: center; line-height: 1.15; }
-      .ring-value { font-size: 1.5em; font-weight: 800; }
-      .ring-sub { font-size: .7em; opacity: .85; margin-top: 2px; }
+      .ring-value { font-size: 1.5em; font-weight: 800; color: #f8fafc; }
+      .ring-sub { font-size: .7em; margin-top: 2px; color: rgba(248,250,252,.82); }
       .ring-meta { font-size: .8em; opacity: .9; text-align: center; }
       .ring-meta b { font-weight: 700; }
 
@@ -584,6 +613,27 @@ class LlmUsageCard extends HTMLElement {
       .empty-hint { font-size: .8em; opacity: .75; }
 
       .tile-foot { font-size: .8em; opacity: .9; }
+
+      /* ---- Light theme (HA light mode): dark glass tint + light ring disc
+             with dark percent text — keeps every value readable. ---- */
+      .card-content.light { --llm-muted: rgba(15,18,30,.25); --llm-spark-1: #0284c7; }
+      .card-content.light .tile {
+        background: rgba(15,18,30,.05);
+        border-color: rgba(15,18,30,.14);
+        box-shadow: 0 8px 24px rgba(15,23,42,.10);
+      }
+      .card-content.light .tile:hover { border-color: rgba(15,18,30,.32); box-shadow: 0 10px 28px rgba(15,23,42,.16); }
+      .card-content.light .title {
+        background: linear-gradient(135deg, #0284c7, #9333ea 55%, #db2777);
+        -webkit-background-clip: text; background-clip: text;
+      }
+      .card-content.light .ring { background: conic-gradient(var(--ring) calc(var(--p) * 1%), rgba(15,18,30,.14) 0); }
+      .card-content.light .ring::before { background: rgba(248,250,252,.94); }
+      .card-content.light .ring-value { color: #0f172a; }
+      .card-content.light .ring-sub { color: rgba(15,23,42,.72); }
+      .card-content.light .ring-meta { opacity: 1; }
+      .card-content.light .sparkline { background: rgba(15,18,30,.06); }
+      .card-content.light .bar { background: rgba(15,18,30,.12); }
 
       @media (max-width: 480px) {
         .grid { grid-template-columns: 1fr; }
@@ -687,6 +737,8 @@ if (typeof module !== "undefined" && module.exports != null) {
     llmUsageFmtUsd,
     llmUsageRingColor,
     llmUsageDiscover,
+    llmUsageIsLight,
+    llmUsagePurchasedBalance,
     LLM_USAGE_I18N,
     LLM_USAGE_VERSION,
   };
@@ -700,6 +752,8 @@ if (typeof module !== "undefined" && module.exports != null) {
     llmUsageFmtUsd,
     llmUsageRingColor,
     llmUsageDiscover,
+    llmUsageIsLight,
+    llmUsagePurchasedBalance,
     LLM_USAGE_I18N,
     LLM_USAGE_VERSION,
   };

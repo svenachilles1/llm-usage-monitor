@@ -161,6 +161,42 @@ test("version: card version matches manifest.json", () => {
   assertEq(logic.LLM_USAGE_VERSION, manifest.version, "card version == manifest version");
 });
 
+// ------------------------------------------------ light mode + purchased --
+test("theme: light mode detection from hass.themes.darkMode", () => {
+  assertEq(logic.llmUsageIsLight({ themes: { darkMode: false } }), true, "darkMode false -> light");
+  assertEq(logic.llmUsageIsLight({ themes: { darkMode: true } }), false, "darkMode true -> dark");
+  assertEq(logic.llmUsageIsLight({ themes: {} }), false, "missing darkMode -> dark default");
+  assertEq(logic.llmUsageIsLight({}), false, "missing themes -> dark default");
+  assertEq(logic.llmUsageIsLight(null), false, "null hass -> dark default");
+});
+
+test("purchased: legacy plan reads the weekly sensor attribute", () => {
+  const credits = { state: "unavailable", attributes: {} };
+  const weekly = { state: "68", attributes: { purchased_balance_usd: 20 } };
+  assertEq(logic.llmUsagePurchasedBalance(credits, weekly), 20, "legacy weekly attr");
+});
+
+test("purchased: credit plan prefers the credits sensor", () => {
+  const credits = { state: "72.5", attributes: { purchased_balance_usd: 5.5 } };
+  const weekly = { state: "unavailable", attributes: {} };
+  assertEq(logic.llmUsagePurchasedBalance(credits, weekly), 5.5, "credits sensor attr");
+});
+
+test("purchased: zero is a value, garbage is not", () => {
+  const zero = { state: "10", attributes: { purchased_balance_usd: 0 } };
+  assertEq(logic.llmUsagePurchasedBalance(null, zero), 0, "zero is finite and shown");
+  const broken = { state: "10", attributes: { purchased_balance_usd: "abc" } };
+  assertEq(logic.llmUsagePurchasedBalance(null, broken), null, "garbage -> null");
+  assertEq(logic.llmUsagePurchasedBalance(null, null), null, "nothing -> null");
+  const un = { state: "unavailable", attributes: {} };
+  assertEq(logic.llmUsagePurchasedBalance(un, un), null, "both unavailable -> null");
+});
+
+test("purchased: i18n labels exist in both languages", () => {
+  assertTrue(logic.LLM_USAGE_I18N.de.purchasedBalance, "de label");
+  assertTrue(logic.LLM_USAGE_I18N.en.purchasedBalance, "en label");
+});
+
 // -------------------------------------------------------------------- report --
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

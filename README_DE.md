@@ -5,6 +5,7 @@
 Überwache deine **Ollama**-Cloud- und **NanoGPT**-Abo-Limits direkt in Home Assistant — Session- und Wochenlimits, Guthaben, Token-Quoten, Reset-Countdowns und Verbrauchsverlauf auf einer schönen Glassmorphism-Dashboard-Karte.
 
 ![LLM Usage Card](docs/screenshot.png)
+![LLM Usage Card — helles Design](docs/screenshot-light.png)
 
 ## Funktionen
 
@@ -12,7 +13,7 @@
 
 - **Session-Limit**-Ring mit genutzten Prozent und live Reset-Countdown
 - **Wochenlimit**-Ring mit genutzten Prozent und live Reset-Countdown
-- Gekauftes Guthaben als Sensor-Attribut
+- **Gekauftes Guthaben** (USD) direkt auf der Karte sichtbar
 
 ### Ollama (Credits-Pläne)
 
@@ -37,6 +38,7 @@
 - Funktioniert mit **nur Ollama, nur NanoGPT oder beiden** — Kacheln erscheinen und verschwinden automatisch
 - Mehrere Accounts möglich (ein Config Entry pro Key-Kombination)
 - Aurora-/Glassmorphism-Familiendesign, animierter Hintergrund, Fortschrittsringe, Sparklines
+- Vollgehend designbewusst — **Hell- und Dunkelmodus** rendern beide lesbare Ringe und Werte
 - In **Deutsch und Englisch** lokalisiert (folgt der Home-Assistant-Sprache)
 - Visueller Karten-Editor mit optionalen Entity-Overrides
 - Fehler-Banner pro Anbieter (ungültiger Key, Verbindungsprobleme) im selben Design
